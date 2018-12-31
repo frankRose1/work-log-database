@@ -6,51 +6,43 @@
     tasks and view a report in the terminal.
 """
 import datetime
+import os
 from collections import OrderedDict
 
-from peewee import *
+from database_config import initialize_db, Task
 
-db = SqliteDatabase('worklog.db')
-
-class Task(Model):
-    employee= CharField(max_length=150)
-    title = CharField(max_length=200)
-    time_spent = IntegerField()
-    date = DateField()
-    notes = TextField(null=True)
-
-    class Meta:
-        database = db
-
-
-def initialize_db():
-    """Connect to the database and create the tables"""
-    db.connect()
-    db.create_tables([Task], safe=True)
-
+def clear_terminal():
+    os.system('clear')
+    # os.system('cls' if os.name == 'nt' else 'clear')
 
 def view_tasks(tasks):
     """Cycle through any tasks found and allow user to edit/delete a task
     Arguments:
         :tasks: list of tasks found
     """
-    for task in tasks:
-        print('='*20)
-        print(task.title)
-        print(task.employee)
-        print(task.date)
-        if task.notes:
-            print(task.notes)
-        print('\n'+'='*20)
-        print('[N]ext, [E]dit, [D]elete [R]eturn to menu')
-        next_action = input('Action: [Nedr] ').strip().lower()
+    if len(tasks) >= 1:
+        tasks.order_by(Task.date.desc())
+        for task in tasks:
+            clear_terminal()
+            print('='*20)
+            print(task.title)
+            print(task.employee)
+            print(task.date)
+            if task.notes:
+                print(task.notes)
+            print('\n'+'='*20)
+            print('[N]ext, [E]dit, [D]elete [R]eturn to menu')
+            next_action = input('Action: [Nedr] ').strip().lower()
 
-        if next_action == 'r':
-            break
-        elif next_action == 'd':
-            delete_task(task)
-        elif next_action == 'e':
-            edit_task(task)
+            if next_action == 'r':
+                break
+            elif next_action == 'd':
+                delete_task(task)
+            elif next_action == 'e':
+                edit_task(task)
+    else:
+        clear_terminal()
+        input('No results found. Press enter to return to search menu ')
 
 def get_task_data():
     """Gets the task data from the user"""
@@ -66,7 +58,6 @@ def get_task_data():
         'date': task_date,
         'notes': task_notes
     }
-
 
 def add_task():
     """Create a new task entry"""
@@ -96,8 +87,10 @@ def edit_task(task):
 
 def search_by_name():
     """Search by employee name"""
-    name_to_search = input('Employee name: ')
-    tasks = Task.select().where(Task.employee.contains(name_to_search)).order_by(Task.date.desc())
+    name_query = input('Employee name: ')
+    tasks = (Task
+            .select()
+            .where(Task.employee.contains(name_query)))
     view_tasks(tasks)
 
 def search_by_date():
@@ -106,11 +99,21 @@ def search_by_date():
 
 def search_by_time():
     """Search by time spent on task"""
-    pass
+    time_query = get_time_input()
+    tasks = (Task
+            .select()
+            .where(Task.time_spent == time_query))
+    view_tasks(tasks)
 
 def search_by_term():
     """Search by a term in either title or notes"""
-    pass
+    term_query = input('Enter your search term: ').strip()
+    tasks = (Task
+            .select()
+            .where(
+                (Task.title.contains(term_query)) | 
+                (Task.notes.contains(term_query))))
+    view_tasks(tasks)
 
 def get_date_input():
     """Get task date from the user"""
@@ -149,6 +152,7 @@ def print_search_menu():
     """Search tasks"""
     search_choice = None
     while search_choice != 'q':
+        clear_terminal()
         print('Enter "q" to return to main menu')
         for key, value in search_menu.items():
             print('{}) {}'.format(key, value.__doc__))
@@ -167,6 +171,9 @@ def print_main_menu():
     """Print a menu of options for the user"""
     user_choice = None
     while user_choice != 'q':
+        clear_terminal()
+        print('WORK LOG DATABASE')
+        print('='*17)
         for key, value in main_menu.items():
             print('{}) {}'.format(key, value.__doc__))
         user_choice = input('Your choice: ').lower().strip()
