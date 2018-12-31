@@ -12,16 +12,15 @@ from peewee import *
 
 db = SqliteDatabase('worklog.db')
 
-class BaseClass(Model):
-    class Meta:
-        database = db
-
-class Task(BaseClass):
+class Task(Model):
     employee= CharField(max_length=150)
     title = CharField(max_length=200)
     time_spent = IntegerField()
     date = DateField()
     notes = TextField(null=True)
+
+    class Meta:
+        database = db
 
 
 def initialize_db():
@@ -30,9 +29,11 @@ def initialize_db():
     db.create_tables([Task], safe=True)
 
 
-def search_tasks():
-    """Search tasks"""
-    tasks = Task.select()
+def view_tasks(tasks):
+    """Cycle through any tasks found and allow user to edit/delete a task
+    Arguments:
+        :tasks: list of tasks found
+    """
     for task in tasks:
         print('='*20)
         print(task.title)
@@ -51,17 +52,65 @@ def search_tasks():
         elif next_action == 'e':
             edit_task(task)
 
-def add_task():
-    """Create a new task entry"""
+def get_task_data():
+    """Gets the task data from the user"""
     employee_name = input('Employee name: ').strip()
     task_title = input('Title: ').strip()
     task_time = get_time_input()
     task_date = get_date_input()
     task_notes = input('Notes (optional): ').strip()
+    return {
+        'employee': employee_name,
+        'title': task_title,
+        'time_spent': task_time,
+        'date': task_date,
+        'notes': task_notes
+    }
+
+
+def add_task():
+    """Create a new task entry"""
+    new_task = get_task_data()
     if input('Save entry? [Yn] ').lower().strip() != 'n':
-        Task.create(employee=employee_name, title=task_title, 
-                    time_spent=task_time, date=task_date, notes=task_notes)
-        print('Entry saved!')
+        Task.create(employee=new_task['employee'], title=new_task['title'], 
+                    time_spent=new_task['time_spent'], date=new_task['date'], notes=new_task['notes'])
+        print('Entry added!')
+
+def delete_task(task):
+    """Deletes a task from the Database"""
+    if input('Are your sure? [yN] ').lower().strip() == 'y':
+        task.delete_instance()
+        print('Task was deleted!')
+
+def edit_task(task):
+    """Updates/saves a task"""
+    updated_task = get_task_data()
+    if input('Update entry? [Yn] ').lower().strip() != 'n':
+        task.employee = updated_task['employee']
+        task.title = updated_task['title']
+        task.time_spent = updated_task['time_spent']
+        task.date = updated_task['date']
+        task.notes = updated_task['notes']
+        task.save()
+        print('Task updated!')
+
+def search_by_name():
+    """Search by employee name"""
+    name_to_search = input('Employee name: ')
+    tasks = Task.select().where(Task.employee.contains(name_to_search)).order_by(Task.date.desc())
+    view_tasks(tasks)
+
+def search_by_date():
+    """Search by date"""
+    pass
+
+def search_by_time():
+    """Search by time spent on task"""
+    pass
+
+def search_by_term():
+    """Search by a term in either title or notes"""
+    pass
 
 def get_date_input():
     """Get task date from the user"""
@@ -83,35 +132,11 @@ def get_time_input():
         except ValueError:
             print('Error: "{}" doesn\'t seem to be a valid time. Numbers only!'.format(time_input))
 
-def delete_task(task):
-    """Deletes a task from the Database"""
-    if input('Are your sure? [yN] ').lower().strip() == 'y':
-        task.delete_instance()
-        print('Task was deleted!')
-
-def edit_task(task):
-    """Updates/saves a task"""
-    print(task)
 
 def quit_program():
     """Quit program"""
     print('\nUser has ended the program.')
 
-def search_by_name():
-    """Search by employee name"""
-    pass
-
-def search_by_date():
-    """Search by date"""
-    pass
-
-def search_by_time():
-    """Search by time spent on task"""
-    pass
-
-def search_by_term():
-    """Search by a term in either title or notes"""
-    pass
 
 search_menu = OrderedDict([
     ('a', search_by_name),
