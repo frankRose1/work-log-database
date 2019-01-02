@@ -21,17 +21,19 @@ def view_tasks(tasks):
         :tasks: list of tasks found
     """
     if len(tasks) >= 1:
-        tasks.order_by(Task.date.desc())
+        results = len(tasks)
+        counter = 0
         for task in tasks:
             clear_terminal()
             print('='*20)
             print('Employee: {}'.format(task.employee))
             print('Title: {}'.format(task.title))
-            print('Date: {}'.format(task.date))
+            print('Date (YYYY/MM/DD): {}'.format(task.date))
             print('Time Spent (in minutes): {}'.format(task.time_spent))
             if task.notes:
-                print(task.notes)
-            print('\n'+'='*20)
+                print('Notes: {}'.format(task.notes))
+            print('\nResult {} of {}\n'.format(counter + 1, results))
+            print('='*20)
             print('[N]ext, [E]dit, [D]elete [R]eturn to menu')
             next_action = input('Action: [Nedr] ').strip().lower()
 
@@ -41,6 +43,7 @@ def view_tasks(tasks):
                 delete_task(task)
             elif next_action == 'e':
                 edit_task(task)
+            counter += 1
     else:
         clear_terminal()
         input('No results found. Press enter to return to search menu ')
@@ -91,7 +94,8 @@ def search_by_name():
     name_query = input('Employee name: ')
     tasks = (Task
             .select()
-            .where(Task.employee.contains(name_query)))
+            .where(Task.employee.contains(name_query))
+            .order_by(Task.date.desc()))
     view_tasks(tasks)
 
 def search_by_date():
@@ -99,7 +103,8 @@ def search_by_date():
     date_query = get_date_input()
     tasks = (Task
             .select()
-            .where(Task.date == date_query))
+            .where(Task.date == date_query)
+            .order_by(Task.date.desc()))
     view_tasks(tasks)
 
 def search_by_time():
@@ -107,7 +112,8 @@ def search_by_time():
     time_query = get_time_input()
     tasks = (Task
             .select()
-            .where(Task.time_spent == time_query))
+            .where(Task.time_spent == time_query)
+            .order_by(Task.date.desc()))
     view_tasks(tasks)
 
 def search_by_term():
@@ -117,7 +123,8 @@ def search_by_term():
             .select()
             .where(
                 (Task.title.contains(term_query)) | 
-                (Task.notes.contains(term_query))))
+                (Task.notes.contains(term_query)))
+                .order_by(Task.date.desc()))
     view_tasks(tasks)
 
 def get_date_input():
