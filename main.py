@@ -25,9 +25,10 @@ def view_tasks(tasks):
         for task in tasks:
             clear_terminal()
             print('='*20)
-            print(task.title)
-            print(task.employee)
-            print(task.date)
+            print('Employee: {}'.format(task.employee))
+            print('Title: {}'.format(task.title))
+            print('Date: {}'.format(task.date))
+            print('Time Spent (in minutes): {}'.format(task.time_spent))
             if task.notes:
                 print(task.notes)
             print('\n'+'='*20)
@@ -95,7 +96,11 @@ def search_by_name():
 
 def search_by_date():
     """Search by date"""
-    pass
+    date_query = get_date_input()
+    tasks = (Task
+            .select()
+            .where(Task.date == date_query))
+    view_tasks(tasks)
 
 def search_by_time():
     """Search by time spent on task"""

@@ -15,7 +15,6 @@ class Task(Model):
     class Meta:
         database = db
 
-
 def initialize_db():
     """Connect to the database and create the tables"""
     db.connect()
