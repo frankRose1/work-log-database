@@ -9,6 +9,7 @@ import datetime
 import os
 from collections import OrderedDict
 
+from validator import Validator
 from database_config import initialize_db, Task
 
 def clear_terminal():
@@ -50,10 +51,10 @@ def view_tasks(tasks):
 
 def get_task_data():
     """Gets the task data from the user"""
-    employee_name = input('Employee name: ').strip()
-    task_title = input('Title: ').strip()
-    task_time = get_time_input()
-    task_date = get_date_input()
+    employee_name = Validator.validate_employee()
+    task_title = Validator.validate_title()
+    task_time = Validator.validate_time()
+    task_date = Validator.validate_date()
     task_notes = input('Notes (optional): ').strip()
     return {
         'employee': employee_name,
@@ -126,27 +127,6 @@ def search_by_term():
                 (Task.notes.contains(term_query)))
                 .order_by(Task.date.desc()))
     view_tasks(tasks)
-
-def get_date_input():
-    """Get task date from the user"""
-    while True:
-        date_str = input('Task date, use DD/MM/YYYY format: ').strip()
-        try:
-            date = datetime.datetime.strptime(date_str, '%d/%m/%Y')
-            return date
-        except ValueError:
-            print('Error: {} doesn\'t seem to be a valid date, please try again.'.format(date_str))
-
-def get_time_input():
-    """Gets the time spent on the task from the user"""
-    while True:
-        time_input = input('Time spent on task (in minutes): ')
-        try:
-            time_input = int(time_input) 
-            return time_input
-        except ValueError:
-            print('Error: "{}" doesn\'t seem to be a valid time. Numbers only!'.format(time_input))
-
 
 def quit_program():
     """Quit program"""
