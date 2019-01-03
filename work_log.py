@@ -5,10 +5,10 @@
     their name, task title, amount of time and any general notes regarding the task. Can also search 
     tasks and view a report in the terminal.
 """
-import datetime
 import os
 from collections import OrderedDict
 
+from search import Search
 from validator import Validator
 from database_config import initialize_db, Task
 
@@ -23,7 +23,7 @@ def view_tasks(tasks):
     """
     if len(tasks) >= 1:
         results = len(tasks)
-        counter = 0
+        counter = 1
         for task in tasks:
             clear_terminal()
             print('='*20)
@@ -33,7 +33,7 @@ def view_tasks(tasks):
             print('Time Spent (in minutes): {}'.format(task.time_spent))
             if task.notes:
                 print('Notes: {}'.format(task.notes))
-            print('\nResult {} of {}\n'.format(counter + 1, results))
+            print('\nResult {} of {}\n'.format(counter, results))
             print('='*20)
             print('[N]ext, [E]dit, [D]elete [R]eturn to menu')
             next_action = input('Action: [Nedr] ').strip().lower()
@@ -64,9 +64,8 @@ def get_task_data():
         'notes': task_notes
     }
 
-def add_task():
+def add_task(new_task):
     """Create a new task entry"""
-    new_task = get_task_data()
     if input('Save entry? [Yn] ').lower().strip() != 'n':
         Task.create(employee=new_task['employee'], title=new_task['title'], 
                     time_spent=new_task['time_spent'], date=new_task['date'], notes=new_task['notes'])
@@ -74,7 +73,7 @@ def add_task():
 
 def delete_task(task):
     """Deletes a task from the Database"""
-    if input('Are your sure? [yN] ').lower().strip() == 'y':
+    if input('Are you sure you want to delete this entry? [yN] ').lower().strip() == 'y':
         task.delete_instance()
         print('Task was deleted!')
 
@@ -90,54 +89,16 @@ def edit_task(task):
         task.save()
         print('Task updated!')
 
-def search_by_name():
-    """Search by employee name"""
-    name_query = input('Employee name: ')
-    tasks = (Task
-            .select()
-            .where(Task.employee.contains(name_query))
-            .order_by(Task.date.desc()))
-    view_tasks(tasks)
-
-def search_by_date():
-    """Search by date"""
-    date_query = get_date_input()
-    tasks = (Task
-            .select()
-            .where(Task.date == date_query)
-            .order_by(Task.date.desc()))
-    view_tasks(tasks)
-
-def search_by_time():
-    """Search by time spent on task"""
-    time_query = get_time_input()
-    tasks = (Task
-            .select()
-            .where(Task.time_spent == time_query)
-            .order_by(Task.date.desc()))
-    view_tasks(tasks)
-
-def search_by_term():
-    """Search by a term in either title or notes"""
-    term_query = input('Enter your search term: ').strip()
-    tasks = (Task
-            .select()
-            .where(
-                (Task.title.contains(term_query)) | 
-                (Task.notes.contains(term_query)))
-                .order_by(Task.date.desc()))
-    view_tasks(tasks)
-
 def quit_program():
     """Quit program"""
     print('\nUser has ended the program.')
 
 
 search_menu = OrderedDict([
-    ('a', search_by_name),
-    ('b', search_by_date),
-    ('c', search_by_time),
-    ('d', search_by_term)
+    ('a', Search.by_name),
+    ('b', Search.by_date),
+    ('c', Search.by_time),
+    ('d', Search.by_term)
 ])
 
 def print_search_menu():
@@ -151,7 +112,8 @@ def print_search_menu():
 
         search_choice = input('Your choice: ').lower().strip()
         if search_choice in search_menu:
-            search_menu[search_choice]()
+            tasks = search_menu[search_choice]()
+            view_tasks(tasks)
 
 main_menu = OrderedDict([
     ('a', add_task),
@@ -170,7 +132,11 @@ def print_main_menu():
             print('{}) {}'.format(key, value.__doc__))
         user_choice = input('Your choice: ').lower().strip()
         if user_choice in main_menu:
-            main_menu[user_choice]()
+            if user_choice == 'a':
+                new_task = get_task_data()
+                main_menu[user_choice](new_task)
+            else:
+                main_menu[user_choice]()
 
 if __name__ == '__main__':
     """Initialize the db and print the menu"""

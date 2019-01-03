@@ -1,7 +1,7 @@
 import datetime
 
 class Validator:
-    """Helper class for checking the users input before it is saved tp the DB"""
+    """Helper class for checking the users input before it is saved to the DB"""
 
     @classmethod
     def validate_employee(cls):

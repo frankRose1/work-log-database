@@ -6,6 +6,7 @@ tasks were saved to the file system in a csv file.
 
 ## App Features
 
+- to start the app, in the command line run ```pipenv
 - Menu loop will prompt users for actions adding tasks, various search methods, and an option to quit the program
 - New tasks can be created and added to the database
 - Tasks can be searched by date, employee name, time_spent, or term in notes/title
@@ -13,5 +14,6 @@ tasks were saved to the file system in a csv file.
 
 ## Technologies Used
 
-- peewee
-- coverage
+- pipenv - to set up a virtual environment
+- peewee - as an ORM
+- coverage - to see the percentage of code covered by tests
