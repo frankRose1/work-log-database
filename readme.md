@@ -15,8 +15,7 @@ tasks were saved to the file system in a csv file. Also includes unit tests.
 
 ## Tests
 
-- currently there is 65% coverage
-- tests are included for `search.py` and `validator.py`
+- currently there is 71% coverage
 - to run tests:
   - in the root directory run `pipenv run coverage run tests.py`
   - for a detailed report run `pipenv run coverage report -m`

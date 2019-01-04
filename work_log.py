@@ -13,8 +13,7 @@ from validator import Validator
 from database_config import initialize_db, Task
 
 def clear_terminal():
-    os.system('clear')
-    # os.system('cls' if os.name == 'nt' else 'clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def view_tasks(tasks):
     """Cycle through any tasks found and allow user to edit/delete a task
@@ -64,12 +63,13 @@ def get_task_data():
         'notes': task_notes
     }
 
-def add_task(new_task):
+def create_task(new_task):
     """Create a new task entry"""
     if input('Save entry? [Yn] ').lower().strip() != 'n':
         Task.create(employee=new_task['employee'], title=new_task['title'], 
-                    time_spent=new_task['time_spent'], date=new_task['date'], notes=new_task['notes'])
-        print('Entry added!')
+                    time_spent=new_task['time_spent'], date=new_task['date'], 
+                    notes=new_task['notes'])
+        return True
 
 def delete_task(task):
     """Deletes a task from the Database"""
@@ -116,7 +116,7 @@ def print_search_menu():
             view_tasks(tasks)
 
 main_menu = OrderedDict([
-    ('a', add_task),
+    ('a', create_task),
     ('s', print_search_menu),
     ('q', quit_program)
 ])
@@ -134,7 +134,8 @@ def print_main_menu():
         if user_choice in main_menu:
             if user_choice == 'a':
                 new_task = get_task_data()
-                main_menu[user_choice](new_task)
+                if main_menu[user_choice](new_task):
+                    print('Entry added')
             else:
                 main_menu[user_choice]()
 

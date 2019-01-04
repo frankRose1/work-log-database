@@ -4,7 +4,7 @@
 """
 import unittest
 import datetime
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from peewee import *
 
@@ -82,8 +82,7 @@ class BaseTestCase(unittest.TestCase):
 
 		def add_test_tasks(self, test_task):
 				with patch('builtins.input', side_effect=['y']):
-						# will cause "Add Entry!" to be printed to the terminal
-						work_log.add_task(test_task)
+						work_log.create_task(test_task)
 
 
 @patch('builtins.input')
@@ -115,6 +114,41 @@ class SearchTests(BaseTestCase):
 				MockInput.side_effect = ['test']
 				expected_output = Search.by_term()
 				self.assertEqual(len(expected_output), 2)
+				self.assertIn('test', expected_output[0].title)
+				self.assertIn('test', expected_output[1].title)
+
+class WorkLogTests(BaseTestCase):
+
+		def test_delete_task(self):
+				"""After being deleted, search result for "John" should be 0"""
+				with patch('builtins.input', side_effect=['john', 'y', 'john']):
+						with patch('builtins.print') as mock_print:
+								# should find one match for "john"
+								employee_match = Search.by_name()
+								self.assertEqual(len(employee_match), 1)
+								# delete the task
+								work_log.delete_task(employee_match[0])
+								# length should now be zero
+								expected_output = Search.by_name()
+								self.assertEqual(len(expected_output), 0)
+								mock_print.assert_called_once_with('Task was deleted!')
+
+		def test_get_task_data(self):
+				"""Get task data should gather input from the user and return a dict"""
+				user_inputs = ['Dave Chapelle', 'Writing unit tests', 30, '03/01/2019',
+											'some random notes']
+				with patch('builtins.input', side_effect=user_inputs):
+						expected_output = work_log.get_task_data()
+						self.assertIsInstance(expected_output, dict)
+						self.assertEqual(expected_output['employee'], user_inputs[0])
+						self.assertEqual(expected_output['time_spent'], user_inputs[2])
+
+		@patch('builtins.input', side_effect=['q'])
+		@patch('work_log.quit_program')
+		def test_quit_program(self, mock_input, mock_quit_program):
+				"""Quit program should be called if user types "q" """
+				work_log.print_main_menu()
+				mock_quit_program.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()
